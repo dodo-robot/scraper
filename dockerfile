@@ -9,8 +9,21 @@ COPY package.json ./
 
 # Install the app dependencies
 RUN npm install
+
+# Install missing dependencies for Playwright
+RUN apt-get update && apt-get install -y \
+    libenchant-2-2 \
+    libicu66 \
+    libjpeg-turbo8 \
+    libvpx6 \
+    libevent-2.1-7 \
+    ttf-ubuntu-font-family \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Playwright and its browser dependencies
 RUN npx playwright install
 RUN npx playwright install-deps
+
 # Copy the rest of the application code to the working directory
 COPY . .
 
