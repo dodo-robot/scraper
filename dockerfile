@@ -1,5 +1,5 @@
 # Use the official Node.js image from Docker Hub
-FROM node:16
+FROM mcr.microsoft.com/playwright:v1.25.0-focal
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
@@ -9,19 +9,6 @@ COPY package.json ./
 
 # Install the app dependencies
 RUN npm install
-
-# Install missing dependencies for Playwright
-RUN apt-get update && apt-get install -y \
-    libicu-dev \
-    libjpeg-dev \
-    libvpx-dev \
-    libevent-dev \
-    ttf-mscorefonts-installer \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Playwright and its browser dependencies
-RUN npx playwright install
-RUN npx playwright install-deps
 
 # Copy the rest of the application code to the working directory
 COPY . .
