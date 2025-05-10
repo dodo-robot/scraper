@@ -1,5 +1,5 @@
 # Use the official Node.js image from Docker Hub
-FROM mcr.microsoft.com/playwright:v1.50.0-noble
+FROM mcr.microsoft.com/playwright:v1.52.0-noble
 
 # Set the working directory inside the container
 WORKDIR /usr/src/app
