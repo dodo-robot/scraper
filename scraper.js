@@ -1,30 +1,30 @@
-import { chromium, Browser, Page } from 'playwright'
+import { chromium } from 'playwright'
 
-let browser: Browser | null = null
-let page: Page | null = null
+let browser = null
+let context = null
 
 async function initBrowser() {
   if (!browser) {
     browser = await chromium.launch({ headless: true })
-    const context = await browser.newContext({
+    context = await browser.newContext({
       userAgent:
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
     })
-    page = await context.newPage()
   }
-  return page
+  return context
 }
 
 export async function closeBrowser() {
   if (browser) {
     await browser.close()
     browser = null
-    page = null
+    context = null
   }
 }
 
-export async function searchWines(query: string) {
-  const page = await initBrowser()
+export async function searchWines(query) {
+  const context = await initBrowser()
+  const page = await context.newPage()
 
   await page.goto(
     `https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`,
@@ -66,21 +66,24 @@ export async function searchWines(query: string) {
       .filter(Boolean)
   })
 
+  await page.close()
   return wines
 }
 
-export async function getWineDetails(wineUrl: string) {
-  const page = await initBrowser()
-  const fullUrl = `https://www.vivino.com${wineUrl}`
+export async function getWineDetails(wineUrl) {
+  const context = await initBrowser()
+  const page = await context.newPage()
 
+  const fullUrl = `https://www.vivino.com${wineUrl}`
   await page.goto(fullUrl, { timeout: 60000 })
+
   await page.waitForSelector('.wineHeadline-module__wineHeadline--32Ety', {
     timeout: 15000,
   })
 
   const wine = await page.evaluate(() => {
     try {
-      const getText = (selector: string) =>
+      const getText = (selector) =>
         document.querySelector(selector)?.textContent?.trim() || null
 
       const srcImg = (() => {
@@ -120,5 +123,6 @@ export async function getWineDetails(wineUrl: string) {
     }
   })
 
+  await page.close()
   return wine
 }
