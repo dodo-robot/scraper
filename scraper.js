@@ -1,13 +1,31 @@
-import { chromium } from 'playwright'
+import { chromium, Browser, Page } from 'playwright'
 
-export async function searchWines(query) {
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({
-    userAgent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
-  })
+let browser: Browser | null = null
+let page: Page | null = null
 
-  const page = await context.newPage()
+async function initBrowser() {
+  if (!browser) {
+    browser = await chromium.launch({ headless: true })
+    const context = await browser.newContext({
+      userAgent:
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
+    })
+    page = await context.newPage()
+  }
+  return page
+}
+
+export async function closeBrowser() {
+  if (browser) {
+    await browser.close()
+    browser = null
+    page = null
+  }
+}
+
+export async function searchWines(query: string) {
+  const page = await initBrowser()
+
   await page.goto(
     `https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`,
     { timeout: 60000 }
@@ -42,39 +60,28 @@ export async function searchWines(query) {
 
           return { url: uri, image, name, country }
         } catch (err) {
-          return null // skip broken entries
+          return null
         }
       })
-      .filter(Boolean) // remove nulls
+      .filter(Boolean)
   })
 
-  await browser.close()
   return wines
 }
 
-
-export async function getWineDetails(wineUrl) {
-  const browser = await chromium.launch({ headless: true })
-  const context = await browser.newContext({
-    userAgent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
-  })
-
-  const page = await context.newPage()
+export async function getWineDetails(wineUrl: string) {
+  const page = await initBrowser()
   const fullUrl = `https://www.vivino.com${wineUrl}`
-  await page.goto(fullUrl, { timeout: 60000 })
 
+  await page.goto(fullUrl, { timeout: 60000 })
   await page.waitForSelector('.wineHeadline-module__wineHeadline--32Ety', {
     timeout: 15000,
   })
 
   const wine = await page.evaluate(() => {
     try {
-      const getText = (selector) =>
+      const getText = (selector: string) =>
         document.querySelector(selector)?.textContent?.trim() || null
-
-      const getAttr = (selector, attr) =>
-        document.querySelector(selector)?.getAttribute(attr) || null
 
       const srcImg = (() => {
         const preloadLinks = Array.from(
@@ -85,7 +92,7 @@ export async function getWineDetails(wineUrl) {
         )
         return wineImage?.href || null
       })()
-      
+
       const winery = getText('a.wineHeadline-module__link--G1mKm div')
       const wineName =
         document
@@ -113,7 +120,5 @@ export async function getWineDetails(wineUrl) {
     }
   })
 
-  await browser.close()
   return wine
 }
-  
