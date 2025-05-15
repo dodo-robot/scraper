@@ -9,7 +9,7 @@ export async function generateWineDescription(
   const langText =
     language === 'en'
       ? "Write a very short, engaging wine description based on the wine facts and community reviews. Summarize the wine's aroma, taste, and overall impression never citing the price in ENGLISH."
-      : "Scrivi una brevissima e coinvolgente descrizione del vino basata sui fatti del vino e sulle recensioni della comunità. Riassumi l'aroma, il gusto e l'impressione complessiva senza fare Mai riferimento al prezzo in ITALIANO."
+      : "Scrivi una brevissima e coinvolgente descrizione del vino basata sui fatti del vino e sulle recensioni della comunità. Riassumi l'aroma, il gusto e l'impressione complessiva. Non rfare ripetizione. Evita di parlare del prezzo. Rispondi in ITALIANO."
 
   const prompt = `
 You are a sommelier. ${langText}
