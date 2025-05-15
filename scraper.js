@@ -42,6 +42,11 @@ export async function searchWines(query) {
 
   const page = await context.newPage()
 
+  await page.addInitScript(() => {
+    window.localStorage.setItem('vivino_user_country', '"US"')
+    window.localStorage.setItem('vivino_user_currency', '"USD"')
+  })
+
   await page.route('**/*', (route) => {
     const url = route.request().url()
     const blocked = ['cookielaw', 'consent', 'onetrust', 'braze', 'datadog']

@@ -3,8 +3,7 @@ import fs from 'fs'
 
 ;(async () => {
   const browser = await chromium.launch({
-    headless: false,
-    slowMo: 600,
+    headless: true,
   })
   const context = await browser.newContext({
     userAgent:
@@ -28,6 +27,12 @@ import fs from 'fs'
   ])
   
   const page = await context.newPage()
+
+
+  await page.addInitScript(() => {
+    window.localStorage.setItem('vivino_user_country', '"US"')
+    window.localStorage.setItem('vivino_user_currency', '"USD"')
+  })
 
   await page.route('**/*', (route) => {
     const url = route.request().url()
