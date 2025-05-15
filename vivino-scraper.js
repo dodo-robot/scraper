@@ -1,51 +1,43 @@
-const { chromium } = require('playwright')
-
+import { chromium } from 'playwright'
+  
 ;(async () => {
-  const browser = await chromium.launch({ headless: false }) // set to true when done debugging
+  const browser = await chromium.launch()
   const context = await browser.newContext({
     userAgent:
-      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
-    viewport: { width: 1280, height: 800 },
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
     locale: 'en-US',
+    extraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
   })
-
   const page = await context.newPage()
+  await page.goto('https://www.vivino.com/search/wines?q=bianco', {
+    timeout: 60000,
+  })
+  await page.waitForSelector('div.wine-card', { timeout: 15000 })
 
-  // 🕵️‍♂️ Add stealth-like JS tricks
-  await page.addInitScript(() => {
-    Object.defineProperty(navigator, 'webdriver', { get: () => false })
-    window.chrome = { runtime: {} }
-    Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3] })
-    Object.defineProperty(navigator, 'languages', {
-      get: () => ['en-US', 'en'],
+  const wines = await page.$$eval('div.wine-card', (cards) => {
+    return cards.map((card) => {
+      const nameElement = card.querySelector('a.wine-card__name')
+      const wineryElement = card.querySelector('div.wine-card__winery')
+      const regionElement = card.querySelector('div.wine-card__region')
+      const imageElement = card.querySelector('div.wine-card__image')
+
+      const name = nameElement ? nameElement.textContent.trim() : null
+      const winery = wineryElement ? wineryElement.textContent.trim() : null
+      const region = regionElement ? regionElement.textContent.trim() : null
+
+      let image = null
+      if (imageElement) {
+        const style = imageElement.getAttribute('style')
+        const match = style && style.match(/url\(["']?(.*?)["']?\)/)
+        image = match ? match[1] : null
+      }
+
+      return { name, winery, region, image }
     })
   })
 
-  const search = 'shiraz'
-  const url = `https://www.vivino.com/search/wines?q=${encodeURIComponent(
-    search
-  )}`
-
-  console.log('Navigating to', url)
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
-
-  await page.waitForSelector('.search-results-list .card', { timeout: 15000 })
-
-  const wines = await page.$$eval('.search-results-list .card', (cards) =>
-    cards.map((card) => {
-      const name = card.querySelector('.bold')?.innerText?.trim()
-      const imageStyle = card
-        .querySelector('.wine-card__image-wrapper')
-        ?.getAttribute('style')
-      const image = imageStyle?.match(/url\("(.+?)"\)/)?.[1] ?? null
-      const href = card
-        .querySelector('[data-cartitemsource="text-search"]')
-        ?.getAttribute('href')
-      const url = href ? `https://www.vivino.com${href}` : null
-      return { name, image, url }
-    })
-  )
-
-  console.log('✅ Found wines:', wines.slice(0, 5))
+  console.log(wines)
   await browser.close()
 })()

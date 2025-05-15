@@ -34,35 +34,34 @@ export async function searchWines(query) {
     `https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`,
     { timeout: 60000 }
   )
-  await page.waitForSelector('.search-results-list .card', { timeout: 15000 })
 
-  const wines = await page.$$eval('.search-results-list .card', (cards) => {
+  // Wait for updated wine card selector
+  await page.waitForSelector('.wineCard__wineCard--H3_Gs', { timeout: 15000 })
+
+  const wines = await page.$$eval('.wineCard__wineCard--H3_Gs', (cards) => {
     return cards
       .map((card) => {
         try {
-          const content = card.querySelector('.wine-card__content')
-          const figure = card.querySelector('.wine-card__image-wrapper')
+          const anchor = card.querySelector('a.wineCard__link--Fqvnt')
+          const uri = anchor?.getAttribute('href') || null
 
-          const hrefElement = content?.querySelector(
-            '[data-cartitemsource="text-search"]'
-          )
-          const uri = hrefElement?.getAttribute('href') || null
+          const image =
+            card.querySelector('.wineCard__imageContainer--w8vYv img')?.src ||
+            null
 
-          const imageStyle =
-            figure?.querySelector('.wine-card__image')?.getAttribute('style') ||
-            ''
-          const imageMatch = imageStyle.match(/url\(["']?(.*?)["']?\)/)
-          const image = imageMatch ? imageMatch[1] : null
+          const name =
+            card
+              .querySelector(
+                '.wineCard__wineInformation--N_G1M > div > div:nth-child(1)'
+              )
+              ?.textContent?.trim() || null
 
-          const name = card.querySelector('.bold')?.textContent?.trim() || null
+          const winery =
+            card
+              .querySelector('.wineCard__wineInformation--N_G1M span')
+              ?.textContent?.trim() || null
 
-          const countryHref =
-            content
-              ?.querySelector('[data-item-type="country"]')
-              ?.getAttribute('href') || ''
-          const country = countryHref.replace('/wine-countries/', '') || null
-
-          return { url: uri, image, name, country }
+          return { url: uri, image, name, winery }
         } catch (err) {
           return null
         }
@@ -73,6 +72,7 @@ export async function searchWines(query) {
   await page.close()
   return wines
 }
+
 
 export async function getWineDetails(wineUrl) {
   const context = await initBrowser()
