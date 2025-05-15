@@ -46,11 +46,13 @@ export async function getWineDetails(url) {
 
     const getText = (selector) => $(selector).text().trim() || null
 
-    const srcImg =
-      $('link[rel="preload"][as="image"]')
-        .map((i, el) => $(el).attr('href'))
-        .get()
-        .find((href) => /vivino\.com\/thumbs\/.*\.(png|jpg)/.test(href)) || null
+    const srcImg = $('link[rel="preload"][as="image"]')
+      .map((i, el) => $(el).attr('href'))
+      .get()
+      .find((href) => /vivino\.com\/thumbs\/.*\.(png|jpg)/.test(href))
+
+    const image = srcImg?.startsWith('//') ? `https:${srcImg}` : srcImg || null
+
 
     const winery = $('a.wineHeadline-module__link--G1mKm div').text().trim()
     const wineName = $('div.wineHeadline-module__wineHeadline--32Ety')
@@ -66,7 +68,7 @@ export async function getWineDetails(url) {
 
     const result = {
       url,
-      image: srcImg,
+      image: image,
       name: wineName,
       winery,
       wine_type: wineType,
