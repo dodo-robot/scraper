@@ -40,7 +40,7 @@ export async function getWineDetails(url) {
   try {
 
     await loadProxies()
-    const data = await fetchWithProxy(url)
+    const data = await fetchWithProxy(`https://www.vivino.com${url}`)
 
     const $ = cheerio.load(data)
 
