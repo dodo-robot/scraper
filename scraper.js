@@ -4,7 +4,6 @@ let browser = null
 let context = null
 
 async function initBrowser() {
-  if (!browser) {
     browser = await chromium.launch({ headless: true })
     context = await browser.newContext({
       userAgent:
@@ -14,7 +13,6 @@ async function initBrowser() {
         'Accept-Language': 'en-US,en;q=0.9',
       },
     })
-  }
   return context
 }
 
@@ -27,7 +25,17 @@ export async function closeBrowser() {
 }
 
 export async function searchWines(query) {
-  const context = await initBrowser()
+  const browser = await chromium.launch({
+    headless: true,
+  })
+  const context = await browser.newContext({
+    userAgent:
+      'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
+    locale: 'en-US',
+    extraHTTPHeaders: {
+      'Accept-Language': 'en-US,en;q=0.9',
+    },
+  })
   await context.addCookies([
     {
       name: 'cookieConsent',
@@ -43,8 +51,8 @@ export async function searchWines(query) {
   const page = await context.newPage()
 
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'language', { get: () => 'en-US' })
     window.localStorage.setItem('vivino_user_country', '"US"')
-    window.localStorage.setItem('vivino_user_currency', '"USD"')
   })
 
   await page.route('**/*', (route) => {
@@ -64,8 +72,11 @@ export async function searchWines(query) {
     )
   })
 
-
   await page.waitForLoadState('networkidle')
+
+  await page.waitForFunction(
+    () => document.querySelectorAll('.default-wine-card').length > 0
+  )
 
   const wineCards = await page.$$('.default-wine-card')
   console.log('Wine card count:', wineCards.length)

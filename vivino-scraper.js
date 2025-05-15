@@ -25,13 +25,12 @@ import fs from 'fs'
       sameSite: 'Lax',
     },
   ])
-  
+
   const page = await context.newPage()
 
-
   await page.addInitScript(() => {
+    Object.defineProperty(navigator, 'language', { get: () => 'en-US' })
     window.localStorage.setItem('vivino_user_country', '"US"')
-    window.localStorage.setItem('vivino_user_currency', '"USD"')
   })
 
   await page.route('**/*', (route) => {
@@ -56,9 +55,12 @@ import fs from 'fs'
   const html = await page.content()
   fs.writeFileSync('vivino_search_results.html', html)
 
-
-  
   await page.waitForLoadState('networkidle')
+
+  // Confirm cards loaded
+  await page.waitForFunction(
+    () => document.querySelectorAll('.default-wine-card').length > 0
+  )
 
   const wineCards = await page.$$('.default-wine-card')
   console.log('Wine card count:', wineCards.length)
@@ -102,7 +104,6 @@ import fs from 'fs'
       })
       .filter(Boolean)
   )
-
 
   console.log(wines)
   await browser.close()
