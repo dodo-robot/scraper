@@ -5,8 +5,7 @@ let context = null
 
 async function initBrowser() {
   if (browser) return browser
-  browser = await chromium.launch({ headless: true })
-  return browser
+  return await chromium.launch({ headless: true })
 }
 
 export async function closeBrowser() {
@@ -18,7 +17,7 @@ export async function closeBrowser() {
 }
 
 export async function searchWines(query) {
-  const browser = initBrowser()
+  browser = await initBrowser()
   const context = await browser.newContext({
     userAgent:
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
