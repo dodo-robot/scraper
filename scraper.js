@@ -63,10 +63,10 @@ export async function searchWines(query) {
   console.log('Wine card count:', wineCards.length)
 
   // Adjust the selector based on the current structure
-  await page.waitForSelector('.default-wine-card', {
+  /* await page.waitForSelector('.default-wine-card', {
     state: 'attached',
     timeout: 15000,
-  })
+  }) */
 
   const wines = await page.$$eval('.default-wine-card', (cards) =>
     cards
