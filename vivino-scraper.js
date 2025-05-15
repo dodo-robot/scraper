@@ -57,10 +57,10 @@ import fs from 'fs'
 
 
   // Adjust the selector based on the current structure
-  await page.waitForSelector('.default-wine-card', {
+  /* await page.waitForSelector('div[class^="wineCard__wineCard"]', {
     state: 'attached',
     timeout: 15000,
-  })
+  }) */
 
   const wines = await page.$$eval('.default-wine-card', (cards) =>
     cards

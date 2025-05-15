@@ -9,9 +9,9 @@ async function initBrowser() {
     context = await browser.newContext({
       userAgent:
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
-      locale: 'en-US', 
+      locale: 'en-US',
       extraHTTPHeaders: {
-        'Accept-Language': 'en-US,en;q=0.9', 
+        'Accept-Language': 'en-US,en;q=0.9',
       },
     })
   }
@@ -53,7 +53,7 @@ export async function searchWines(query) {
     `https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`,
     { timeout: 60000 }
   )
-await page.evaluate(() => {
+  await page.evaluate(() => {
     ;['#onetrust-banner-sdk', '#consent-blocker', '.popup', '.overlay'].forEach(
       (sel) => document.querySelector(sel)?.remove()
     )
@@ -61,7 +61,6 @@ await page.evaluate(() => {
 
   const wineCards = await page.$$('.default-wine-card')
   console.log('Wine card count:', wineCards.length)
-
 
   // Adjust the selector based on the current structure
   await page.waitForSelector('.default-wine-card', {
@@ -107,7 +106,6 @@ await page.evaluate(() => {
   await page.close()
   return wines
 }
-
 
 export async function getWineDetails(wineUrl) {
   const context = await initBrowser()
