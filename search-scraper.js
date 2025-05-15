@@ -1,10 +1,16 @@
 import { chromium } from 'playwright'
 import fs from 'fs'
+import { getNextProxy } from './proxyRotator.js'
 
-;(async () => {
+  
+export async function createBrowserWithProxy(proxyUrl) {
   const browser = await chromium.launch({
     headless: true,
+    proxy: {
+      server: proxyUrl, // e.g., http://user:pass@ip:port
+    },
   })
+
   const context = await browser.newContext({
     userAgent:
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
@@ -13,7 +19,6 @@ import fs from 'fs'
       'Accept-Language': 'en-US,en;q=0.9',
     },
   })
-
   await context.addCookies([
     {
       name: 'cookieConsent',
@@ -27,6 +32,17 @@ import fs from 'fs'
   ])
 
   const page = await context.newPage()
+  return { browser, context, page }
+}
+
+
+;(async () => {
+  const proxy = await getNextProxy()
+  const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
+
+  //http://user:pass@ip:port
+  const { browser,context,  page } = await createBrowserWithProxy(proxyUrl)
+  
 
   await page.addInitScript(() => {
     Object.defineProperty(navigator, 'language', { get: () => 'en-US' })
