@@ -57,10 +57,11 @@ import fs from 'fs'
   fs.writeFileSync('vivino_search_results.html', html)
 
 
+  
+  await page.waitForLoadState('networkidle')
+
   const wineCards = await page.$$('.default-wine-card')
   console.log('Wine card count:', wineCards.length)
-
-
   // Adjust the selector based on the current structure
   /* await page.waitForSelector('div[class^="wineCard__wineCard"]', {
     state: 'attached',
