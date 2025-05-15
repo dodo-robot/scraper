@@ -59,10 +59,6 @@ await page.evaluate(() => {
     )
   })
 
-  const html = await page.content()
-  fs.writeFileSync('vivino_search_results.html', html)
-
-
   const wineCards = await page.$$('.default-wine-card')
   console.log('Wine card count:', wineCards.length)
 
