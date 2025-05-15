@@ -1,5 +1,6 @@
 import express from 'express'
 import { searchWines, getWineDetails, getTopReviews } from './scraper.js'
+import { generateWineDescription } from './sommellier.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
@@ -36,8 +37,13 @@ app.get('/description', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'Missing url param' })
 
   try {
-    const details = await getTopReviews(url)
-    res.json(details)
+    const { reviews, wineFacts } = await getTopReviews(url)
+    const wineData = {
+      reviews: reviews,
+      wineFacts: wineFacts,
+    }
+    const description = await generateWineDescription(wineData, "it")
+    res.json(description)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Detail fetch failed' })
