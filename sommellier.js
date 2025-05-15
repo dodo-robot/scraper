@@ -8,8 +8,8 @@ export async function generateWineDescription(
 ) {
   const langText =
     language === 'en'
-      ? "Write a short, engaging wine description based on the wine facts and community reviews. Summarize the wine's aroma, taste, and overall impression in ENGLISH."
-      : "Scrivi una breve e coinvolgente descrizione del vino basata sui fatti del vino e sulle recensioni della comunità. Riassumi l'aroma, il gusto e l'impressione complessiva in ITALIANO."
+      ? "Write a very short, engaging wine description based on the wine facts and community reviews. Summarize the wine's aroma, taste, and overall impression never citing the price in ENGLISH."
+      : "Scrivi una brevissima e coinvolgente descrizione del vino basata sui fatti del vino e sulle recensioni della comunità. Riassumi l'aroma, il gusto e l'impressione complessiva senza fare Mai riferimento al prezzo in ITALIANO."
 
   const prompt = `
 You are a sommelier. ${langText}
@@ -22,7 +22,7 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
   `.trim()
 
   const res = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-4',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
     max_tokens: 250,
