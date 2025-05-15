@@ -4,16 +4,9 @@ let browser = null
 let context = null
 
 async function initBrowser() {
-    browser = await chromium.launch({ headless: true })
-    context = await browser.newContext({
-      userAgent:
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
-      locale: 'en-US',
-      extraHTTPHeaders: {
-        'Accept-Language': 'en-US,en;q=0.9',
-      },
-    })
-  return context
+  if (browser) return browser
+  browser = await chromium.launch({ headless: true })
+  return browser
 }
 
 export async function closeBrowser() {
@@ -25,9 +18,7 @@ export async function closeBrowser() {
 }
 
 export async function searchWines(query) {
-  const browser = await chromium.launch({
-    headless: true,
-  })
+  const browser = initBrowser()
   const context = await browser.newContext({
     userAgent:
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
