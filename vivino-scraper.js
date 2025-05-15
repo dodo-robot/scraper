@@ -1,7 +1,11 @@
 import { chromium } from 'playwright'
-  
+import fs from 'fs'
+
 ;(async () => {
-  const browser = await chromium.launch()
+  const browser = await chromium.launch({
+    headless: false,
+    slowMo: 600,
+  })
   const context = await browser.newContext({
     userAgent:
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/119 Safari/537.36',
@@ -10,33 +14,89 @@ import { chromium } from 'playwright'
       'Accept-Language': 'en-US,en;q=0.9',
     },
   })
+
+  await context.addCookies([
+    {
+      name: 'cookieConsent',
+      value: 'true',
+      domain: '.vivino.com',
+      path: '/',
+      httpOnly: false,
+      secure: true,
+      sameSite: 'Lax',
+    },
+  ])
+  
   const page = await context.newPage()
-  await page.goto('https://www.vivino.com/search/wines?q=bianco', {
-    timeout: 60000,
+
+  await page.route('**/*', (route) => {
+    const url = route.request().url()
+    const blocked = ['cookielaw', 'consent', 'onetrust', 'braze', 'datadog']
+    if (blocked.some((b) => url.includes(b))) return route.abort()
+    return route.continue()
   })
-  await page.waitForSelector('div.wine-card', { timeout: 15000 })
 
-  const wines = await page.$$eval('div.wine-card', (cards) => {
-    return cards.map((card) => {
-      const nameElement = card.querySelector('a.wine-card__name')
-      const wineryElement = card.querySelector('div.wine-card__winery')
-      const regionElement = card.querySelector('div.wine-card__region')
-      const imageElement = card.querySelector('div.wine-card__image')
+  const query = 'bianco'
+  await page.goto(
+    `https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`,
+    { timeout: 60000 }
+  )
 
-      const name = nameElement ? nameElement.textContent.trim() : null
-      const winery = wineryElement ? wineryElement.textContent.trim() : null
-      const region = regionElement ? regionElement.textContent.trim() : null
-
-      let image = null
-      if (imageElement) {
-        const style = imageElement.getAttribute('style')
-        const match = style && style.match(/url\(["']?(.*?)["']?\)/)
-        image = match ? match[1] : null
-      }
-
-      return { name, winery, region, image }
-    })
+  await page.evaluate(() => {
+    ;['#onetrust-banner-sdk', '#consent-blocker', '.popup', '.overlay'].forEach(
+      (sel) => document.querySelector(sel)?.remove()
+    )
   })
+
+  const html = await page.content()
+  fs.writeFileSync('vivino_search_results.html', html)
+
+
+  const wineCards = await page.$$('.default-wine-card')
+  console.log('Wine card count:', wineCards.length)
+
+
+  // Adjust the selector based on the current structure
+  await page.waitForSelector('.default-wine-card', {
+    state: 'attached',
+    timeout: 15000,
+  })
+
+  const wines = await page.$$eval('.default-wine-card', (cards) =>
+    cards
+      .map((card) => {
+        try {
+          const imageWrapper = card.querySelector('.wine-card__image-wrapper a')
+          const href = imageWrapper?.getAttribute('href') || null
+
+          const style =
+            card
+              .querySelector('figure.wine-card__image')
+              ?.getAttribute('style') || ''
+          const imageMatch = style.match(/url\(["']?(.*?)["']?\)/)
+          const image = imageMatch ? `https:${imageMatch[1]}` : null
+
+          const name =
+            card.querySelector('.wine-card__name .bold')?.textContent?.trim() ||
+            null
+          const regionText =
+            card.querySelector('.wine-card__region')?.textContent?.trim() ||
+            null
+
+          const countryHref =
+            card
+              .querySelector('.wine-card__region a[data-item-type="country"]')
+              ?.getAttribute('href') || ''
+          const country = countryHref.replace('/wine-countries/', '') || null
+
+          return { url: href, image, name, region: regionText, country }
+        } catch (err) {
+          return null
+        }
+      })
+      .filter(Boolean)
+  )
+
 
   console.log(wines)
   await browser.close()

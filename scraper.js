@@ -28,46 +28,85 @@ export async function closeBrowser() {
 
 export async function searchWines(query) {
   const context = await initBrowser()
+  await context.addCookies([
+    {
+      name: 'cookieConsent',
+      value: 'true',
+      domain: '.vivino.com',
+      path: '/',
+      httpOnly: false,
+      secure: true,
+      sameSite: 'Lax',
+    },
+  ])
+
   const page = await context.newPage()
+
+  await page.route('**/*', (route) => {
+    const url = route.request().url()
+    const blocked = ['cookielaw', 'consent', 'onetrust', 'braze', 'datadog']
+    if (blocked.some((b) => url.includes(b))) return route.abort()
+    return route.continue()
+  })
 
   await page.goto(
     `https://www.vivino.com/search/wines?q=${encodeURIComponent(query)}`,
     { timeout: 60000 }
   )
+await page.evaluate(() => {
+    ;['#onetrust-banner-sdk', '#consent-blocker', '.popup', '.overlay'].forEach(
+      (sel) => document.querySelector(sel)?.remove()
+    )
+  })
 
-  // Wait for updated wine card selector
-  await page.waitForSelector('.wineCard__wineCard--H3_Gs', { timeout: 15000 })
+  const html = await page.content()
+  fs.writeFileSync('vivino_search_results.html', html)
 
-  const wines = await page.$$eval('.wineCard__wineCard--H3_Gs', (cards) => {
-    return cards
+
+  const wineCards = await page.$$('.default-wine-card')
+  console.log('Wine card count:', wineCards.length)
+
+
+  // Adjust the selector based on the current structure
+  await page.waitForSelector('.default-wine-card', {
+    state: 'attached',
+    timeout: 15000,
+  })
+
+  const wines = await page.$$eval('.default-wine-card', (cards) =>
+    cards
       .map((card) => {
         try {
-          const anchor = card.querySelector('a.wineCard__link--Fqvnt')
-          const uri = anchor?.getAttribute('href') || null
+          const imageWrapper = card.querySelector('.wine-card__image-wrapper a')
+          const href = imageWrapper?.getAttribute('href') || null
 
-          const image =
-            card.querySelector('.wineCard__imageContainer--w8vYv img')?.src ||
-            null
+          const style =
+            card
+              .querySelector('figure.wine-card__image')
+              ?.getAttribute('style') || ''
+          const imageMatch = style.match(/url\(["']?(.*?)["']?\)/)
+          const image = imageMatch ? `https:${imageMatch[1]}` : null
 
           const name =
-            card
-              .querySelector(
-                '.wineCard__wineInformation--N_G1M > div > div:nth-child(1)'
-              )
-              ?.textContent?.trim() || null
+            card.querySelector('.wine-card__name .bold')?.textContent?.trim() ||
+            null
+          const regionText =
+            card.querySelector('.wine-card__region')?.textContent?.trim() ||
+            null
 
-          const winery =
+          const countryHref =
             card
-              .querySelector('.wineCard__wineInformation--N_G1M span')
-              ?.textContent?.trim() || null
+              .querySelector('.wine-card__region a[data-item-type="country"]')
+              ?.getAttribute('href') || ''
+          const country = countryHref.replace('/wine-countries/', '') || null
 
-          return { url: uri, image, name, winery }
+          return { url: href, image, name, region: regionText, country }
         } catch (err) {
           return null
         }
       })
       .filter(Boolean)
-  })
+  )
 
   await page.close()
   return wines
