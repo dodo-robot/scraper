@@ -34,7 +34,7 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
   return trimToLastFullSentence(res.choices[0].message.content.trim())
 }
 
-function trimToLastFullSentence(text: string): string {
+function trimToLastFullSentence(text) {
   const lastPeriodIndex = text.lastIndexOf('.')
   if (lastPeriodIndex === -1) return text // No period found, return as is
   return text.slice(0, lastPeriodIndex + 1).trim()
