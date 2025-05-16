@@ -3,19 +3,22 @@ import { OpenAI } from 'openai'
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function generateWineDescription(
-  { reviews, wineFacts },
+  { reviews, wineFacts, foodPairings },
   language = 'it'
 ) {
   const langText =
     language === 'en'
-      ? "Write a very short, engaging wine description based on the wine facts and community reviews. Summarize the wine's aroma, taste, and overall impression never citing the price in ENGLISH."
-      : "Scrivi una brevissima e coinvolgente descrizione del vino basata sui fatti del vino e sulle recensioni della comunità. Riassumi l'aroma, il gusto e l'impressione complessiva. Non rfare ripetizione. Evita di parlare del prezzo. Rispondi in ITALIANO."
+      ? 'Write a very short, elegant, and original wine description based on the provided wine facts and inspired by the tone and insights from the reviews. Describe the wine’s aroma, taste, and overall character. Conclude with a food pairing suggestion. Do not mention price or explicitly refer to reviews. Avoid repeating information.'
+      : "Scrivi una descrizione molto breve, elegante e originale del vino basandoti sui fatti forniti e ispirandoti al tono e ai suggerimenti contenuti nelle recensioni. Descrivi l'aroma, il gusto e il carattere complessivo del vino. Concludi con un suggerimento di abbinamento gastronomico. Non menzionare il prezzo né fare riferimento esplicito alle recensioni. Evita ripetizioni."
 
   const prompt = `
 You are a sommelier. ${langText}
 
 Wine Facts:
 ${wineFacts.map((fact, i) => `${i + 1}. ${fact}`).join('\n')}
+
+Food Pairings:
+${foodPairings.map((fact, i) => `${i + 1}. ${fact}`).join('\n')}
 
 Reviews:
 ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
@@ -24,14 +27,18 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
   const res = await openai.chat.completions.create({
     model: 'gpt-4',
     messages: [{ role: 'user', content: prompt }],
-    temperature: 0.7,
-    max_tokens: 200,
+    temperature: 0.3,
+    max_tokens: 300,
   })
 
-  return res.choices[0].message.content.trim()
+  return trimToLastFullSentence(res.choices[0].message.content.trim())
 }
 
-
+function trimToLastFullSentence(text: string): string {
+  const lastPeriodIndex = text.lastIndexOf('.')
+  if (lastPeriodIndex === -1) return text // No period found, return as is
+  return text.slice(0, lastPeriodIndex + 1).trim()
+}
 
 
 /**
@@ -41,24 +48,31 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
  * @returns {Promise<Record<string, { low: string[], medium: string[], high: string[] }>>} Recommendations per dish
  */
 export async function recommendWinesPerDish(menu, wines) {
-    // Price categories
-    const priceCategories = {
-      low: [0, 30],
-      medium: [31, 60],
-      high: [61, Infinity],
-    }
-  
-    // Group wines by price category for faster lookup
-    const winesByCategory = {
-      low: wines.filter(w => w.price >= priceCategories.low[0] && w.price < priceCategories.low[1]),
-      medium: wines.filter(w => w.price >= priceCategories.medium[0] && w.price < priceCategories.medium[1]),
-      high: wines.filter(w => w.price >= priceCategories.high[0]),
-    }
-  
-    const recommendations = {}
-  
-    for (const dish of menu) {
-      const prompt = `
+  // Price categories
+  const priceCategories = {
+    low: [0, 30],
+    medium: [31, 60],
+    high: [61, Infinity],
+  }
+
+  // Group wines by price category for faster lookup
+  const winesByCategory = {
+    low: wines.filter(
+      (w) =>
+        w.price >= priceCategories.low[0] && w.price < priceCategories.low[1]
+    ),
+    medium: wines.filter(
+      (w) =>
+        w.price >= priceCategories.medium[0] &&
+        w.price < priceCategories.medium[1]
+    ),
+    high: wines.filter((w) => w.price >= priceCategories.high[0]),
+  }
+
+  const recommendations = {}
+
+  for (const dish of menu) {
+    const prompt = `
   You are a sommelier expert. For the dish "${dish}", recommend **3 wines** for each of the following price categories:
   
   - Low price wines (under $30)
@@ -67,29 +81,31 @@ export async function recommendWinesPerDish(menu, wines) {
   
   You have the following wines available:
   
-  ${wines.map((w, i) => `${i + 1}. ${w.name} - $${w.price} - ${w.description}`).join('\n')}
+  ${wines
+    .map((w, i) => `${i + 1}. ${w.name} - $${w.price} - ${w.description}`)
+    .join('\n')}
   
   For each price category, choose 3 wines from the list above that best pair with the dish.
   
   Return the recommendations as a JSON object with keys "low", "medium", and "high", each containing an array of wine objects.
   `
-  
-      const res = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [{ role: 'user', content: prompt }],
-        temperature: 0.7,
-        max_tokens: 300,
-      })
-  
-      let recs
-      try {
-        recs = JSON.parse(res.choices[0].message.content)
-      } catch {
-        recs = res.choices[0].message.content
-      }
-  
-      recommendations[dish] = recs
+
+    const res = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.7,
+      max_tokens: 300,
+    })
+
+    let recs
+    try {
+      recs = JSON.parse(res.choices[0].message.content)
+    } catch {
+      recs = res.choices[0].message.content
     }
-  
-    return recommendations
+
+    recommendations[dish] = recs
   }
+
+  return recommendations
+}

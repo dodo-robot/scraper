@@ -24,6 +24,15 @@ app.get('/details', async (req, res) => {
 
   try {
     const details = await getWineDetails(url)
+    const { reviews, wineFacts, foodPairings } = await getTopReviews(url)
+    const wineData = {
+      reviews: reviews,
+      wineFacts: wineFacts,
+      foodPairings: foodPairings,
+    }
+    const description = await generateWineDescription(wineData, 'it')
+    details.description = description
+    
     res.json(details)
   } catch (err) {
     console.error(err)
@@ -31,24 +40,7 @@ app.get('/details', async (req, res) => {
   }
 })
 
-
-app.get('/description', async (req, res) => {
-  const url = req.query.url
-  if (!url) return res.status(400).json({ error: 'Missing url param' })
-
-  try {
-    const { reviews, wineFacts } = await getTopReviews(url)
-    const wineData = {
-      reviews: reviews,
-      wineFacts: wineFacts,
-    }
-    const description = await generateWineDescription(wineData, "it")
-    res.json(description)
-  } catch (err) {
-    console.error(err)
-    res.status(500).json({ error: 'Detail fetch failed' })
-  }
-})
+ 
 
 app.listen(PORT, () => {
   console.log(`🍷 Vivino API running on port ${PORT}`)

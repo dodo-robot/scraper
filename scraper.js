@@ -77,22 +77,21 @@ export async function getTopReviews(wineUrl) {
     const proxy = await getNextProxy() // e.g., 'http://user:pass@ip:port'
     const proxyUrl = `http://${proxy.username}:${proxy.password}@${proxy.host}:${proxy.port}`
 
-    const { browser, context,  page } = await createBrowserWithProxy(proxyUrl)
-    console.log("reviews")
+    const { browser, context, page } = await createBrowserWithProxy(proxyUrl)
+    console.log('reviews')
     const fullUrl = `https://www.vivino.com${wineUrl}`
 
     await page.addInitScript(() => {
       Object.defineProperty(navigator, 'language', { get: () => 'en-US' })
       window.localStorage.setItem('vivino_user_country', '"US"')
     })
-  
+
     await page.route('**/*', (route) => {
       const url = route.request().url()
       const blocked = ['cookielaw', 'consent', 'onetrust', 'braze', 'datadog']
       if (blocked.some((b) => url.includes(b))) return route.abort()
       return route.continue()
     })
-  
 
     await page.goto(fullUrl, { waitUntil: 'domcontentloaded' })
 
@@ -119,12 +118,14 @@ export async function getTopReviews(wineUrl) {
     })
 
     await page.evaluate(() => {
-      ;['#onetrust-banner-sdk', '#consent-blocker', '.popup', '.overlay'].forEach(
-        (sel) => document.querySelector(sel)?.remove()
-      )
+      ;[
+        '#onetrust-banner-sdk',
+        '#consent-blocker',
+        '.popup',
+        '.overlay',
+      ].forEach((sel) => document.querySelector(sel)?.remove())
     })
-  
-    
+
     await page.waitForSelector('[data-testid="communityReview"]', {
       timeout: 10000,
     })
@@ -143,13 +144,19 @@ export async function getTopReviews(wineUrl) {
     const wineFacts = await page.$$eval('.wineFacts__fact--3BAsi', (factEls) =>
       factEls.map((el) => el.textContent.trim())
     )
- 
+
+    const foodPairings = await page.$$eval(
+      '.foodPairing__foodImage--2OYHg',
+      (factEls) => factEls.map((el) => el.getAttribute('aria-label'))
+    )
+     
+
+    
     if (browser) {
       await browser.close()
     }
 
-    return { reviews, wineFacts }
-
+    return { reviews, wineFacts, foodPairings }
   } catch (err) {
     console.error('Error in getTopReviews:', err)
     return []
