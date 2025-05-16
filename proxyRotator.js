@@ -13,8 +13,6 @@ export async function loadProxies() {
     const url = new URL(
       'https://proxy.webshare.io/api/v2/proxy/list/?mode=direct'
     )
-    console.log('API KEY:', process.env.WEBSHARE_API_KEY)
-
     const response = await axios.get(url.href, {
       headers: {
         Authorization: `Token ${process.env.WEBSHARE_API_KEY}`,
@@ -27,7 +25,7 @@ export async function loadProxies() {
       username: proxy.username,
       password: proxy.password,
     }))
-
+    return proxies
     console.log(`Loaded ${proxies.length} proxies from Webshare`)
   } catch (error) {
     console.error('Failed to load proxies:', error.message)

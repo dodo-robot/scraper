@@ -1,12 +1,13 @@
-import { getTopReviews } from './scraper.js'
+import { getWineDetails } from './scraper.js'
 import { generateWineDescription } from './sommellier.js'
 import * as cheerio from 'cheerio'
 
 async function main() {
   try {
-      const { reviews, wineFacts, foodPairings } = await getTopReviews('/IT/it/wines/1894613')
-      
-      console.log(foodPairings)
+    const data = await getWineDetails('/IT/it/wines/1894613')
+
+    console.log(data)
+    const { wine, reviews, wineFacts, foodPairings } = data
     const wineData = {
       reviews: reviews,
       wineFacts: wineFacts,

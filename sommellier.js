@@ -28,7 +28,7 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
     model: 'gpt-4',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.3,
-    max_tokens: 300,
+    max_tokens: 400,
   })
 
   return trimToLastFullSentence(res.choices[0].message.content.trim())
