@@ -31,9 +31,9 @@ app.get('/details', async (req, res) => {
       foodPairings: foodPairings,
     }
     const description = await generateWineDescription(wineData, 'it')
-    details.description = description
-    
-    res.json(details)
+    wine.description = description
+    wine.foodPairings = foodPairings
+    res.json(wine)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Detail fetch failed' })
