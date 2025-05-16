@@ -1,5 +1,5 @@
 import express from 'express'
-import { searchWines, getWineDetails, getTopReviews } from './scraper.js'
+import { searchWines, getWineDetails } from './scraper.js'
 import { generateWineDescription } from './sommellier.js'
 
 const app = express()
@@ -24,7 +24,7 @@ app.get('/details', async (req, res) => {
 
   try {
     const details = await getWineDetails(url)
-    const { reviews, wineFacts, foodPairings } = await getTopReviews(url)
+    const { wine, reviews, wineFacts, foodPairings } = details
     const wineData = {
       reviews: reviews,
       wineFacts: wineFacts,
