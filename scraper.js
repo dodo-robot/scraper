@@ -211,8 +211,6 @@ export async function getWineDetails(wineUrl) {
       grape,
     }
 
-    await browser?.close()
-
     return { wine, reviews, wineFacts, foodPairings }
   } catch (err) {
     console.error('Error in getWineDetails:', err)
