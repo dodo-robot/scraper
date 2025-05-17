@@ -1,6 +1,7 @@
 import express from 'express'
 import { searchWines, getWineDetails } from './scraper.js'
 import { generateWineDescription } from './sommellier.js'
+import { retry } from './utils.js'
 
 const app = express()
 const PORT = process.env.PORT || 4000
