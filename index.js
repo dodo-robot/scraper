@@ -10,11 +10,11 @@ app.get('/search', async (req, res) => {
   if (!query) return res.status(400).json({ error: 'Missing query param' })
 
   try {
-    const results = await searchWines(query)
+    const results = await retry(() => searchWines(query), 3)
     res.json(results)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Search failed' })
+    res.status(500).json({ error: 'Search failed after retries' })
   }
 })
 
@@ -23,20 +23,22 @@ app.get('/details', async (req, res) => {
   if (!url) return res.status(400).json({ error: 'Missing url param' })
 
   try {
-    const details = await getWineDetails(url)
+    const details = await retry(() => getWineDetails(url), 3)
     const { wine, reviews, wineFacts, foodPairings } = details
-    const wineData = {
-      reviews: reviews,
-      wineFacts: wineFacts,
-      foodPairings: foodPairings,
-    }
-    const description = await generateWineDescription(wineData, 'it')
+    const wineData = { reviews, wineFacts, foodPairings }
+
+    const description = await retry(
+      () => generateWineDescription(wineData, 'it'),
+      2
+    )
+
     wine.description = description
     wine.foodPairings = foodPairings
+
     res.json(wine)
   } catch (err) {
     console.error(err)
-    res.status(500).json({ error: 'Detail fetch failed' })
+    res.status(500).json({ error: 'Detail fetch failed after retries' })
   }
 })
 
