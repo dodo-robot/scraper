@@ -59,6 +59,20 @@ function getNextBrowser() {
   return browserEntry
 }
 
+async function safeText(page, selector, label) {
+  try {
+    const el = await page.$(selector)
+    if (!el) {
+      console.warn(`Missing element: ${label} (${selector})`)
+      return null
+    }
+    return (await el.textContent())?.trim()
+  } catch (e) {
+    console.error(`Failed to get ${label}:`, e)
+    return null
+  }
+}
+
 
 export async function searchWines(query) {
   await loadProxies()
@@ -176,22 +190,24 @@ export async function getWineDetails(wineUrl) {
       'div.wineHeadline-module__wineHeadline--32Ety',
       (el) => el.lastChild.textContent.trim()
     )
-
-    const region = await page.$eval('[data-cy="breadcrumb-region"]', (el) =>
-      el.textContent.trim()
+    const region = await safeText(
+      page,
+      '[data-cy="breadcrumb-region"]',
+      'region'
+    )
+    const country = await safeText(
+      page,
+      '[data-cy="breadcrumb-country"]',
+      'country'
+    )
+    const wineType = await safeText(
+      page,
+      '[data-cy="breadcrumb-winetype"]',
+      'winetype'
     )
 
-    const country = await page.$eval('[data-cy="breadcrumb-country"]', (el) =>
-      el.textContent.trim()
-    )
+    const grape = await safeText(page, '[data-cy="breadcrumb-grape"]', 'grape')
 
-    const wineType = await page.$eval('[data-cy="breadcrumb-winetype"]', (el) =>
-      el.textContent.trim()
-    )
-
-    const grape = await page.$eval('[data-cy="breadcrumb-grape"]', (el) =>
-      el.textContent.trim()
-    )
 
     const image = await page.getAttribute(
       'link[rel="preload"][as="image"]',
