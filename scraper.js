@@ -156,20 +156,22 @@ export async function getWineDetails(wineUrl) {
       ].forEach((sel) => document.querySelector(sel)?.remove())
     })
 
-    await page.waitForSelector('[data-testid="communityReview"]', {
-      timeout: 10000,
-    })
+    let reviews = []
 
-    const reviews = await page.$$eval(
-      '[data-testid="communityReview"]',
-      (reviewEls) =>
-        reviewEls.slice(0, 3).map((el) => {
-          const ps = el.querySelectorAll('p')
-          return Array.from(ps)
-            .map((p) => p.textContent.trim())
-            .join('\n')
-        })
-    )
+    const hasReviews = await page.$('[data-testid="communityReview"]')
+    if (hasReviews) {
+      reviews = await page.$$eval(
+        '[data-testid="communityReview"]',
+        (reviewEls) =>
+          reviewEls.slice(0, 3).map((el) => {
+            const ps = el.querySelectorAll('p')
+            return Array.from(ps)
+              .map((p) => p.textContent.trim())
+              .join('\n')
+          })
+      )
+    }
+
 
     const wineFacts = await page.$$eval('.wineFacts__fact--3BAsi', (factEls) =>
       factEls.map((el) => el.textContent.trim())
