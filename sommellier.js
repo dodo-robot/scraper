@@ -8,8 +8,8 @@ export async function generateWineDescription(
 ) {
   const langText =
     language === 'en'
-      ? 'Write a very short, elegant, and original wine description based on the provided wine facts and inspired by the tone and insights from the reviews. Describe the wine’s aroma, taste, and overall character. Conclude with a food pairing suggestion. Do not mention price or explicitly refer to reviews. Avoid repeating information.'
-      : "Scrivi una descrizione molto breve, elegante e originale del vino basandoti sui fatti forniti e ispirandoti al tono e ai suggerimenti contenuti nelle recensioni. Descrivi l'aroma, il gusto e il carattere complessivo del vino. Concludi con un suggerimento di abbinamento gastronomico. Non menzionare il prezzo né fare riferimento esplicito alle recensioni. Evita ripetizioni."
+      ? 'Write a very short, elegant, and original wine description based on the provided wine facts and inspired by the tone and insights from the reviews. Describe the wine’s aroma, taste, and overall character. Conclude with a food pairing suggestion. Do not mention price or explicitly refer to reviews. Avoid repeating information. Answer only in English'
+      : "Scrivi una descrizione molto breve, elegante e originale del vino basandoti sui fatti forniti e ispirandoti al tono e ai suggerimenti contenuti nelle recensioni. Descrivi l'aroma, il gusto e il carattere complessivo del vino. Concludi con un suggerimento di abbinamento gastronomico. Non menzionare il prezzo né fare riferimento esplicito alle recensioni. Evita ripetizioni. Rispondi solo in italiano"
 
   const prompt = `
 You are a sommelier. ${langText}
@@ -33,6 +33,69 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
 
   return trimToLastFullSentence(res.choices[0].message.content.trim())
 }
+
+function trimToLastFullSentence(text) {
+  const lastPeriodIndex = text.lastIndexOf('.')
+  if (lastPeriodIndex === -1) return text // No period found, return as is
+  return text.slice(0, lastPeriodIndex + 1).trim()
+}
+
+
+export async function generateDescriptionFromWine(
+  {
+    name,
+    wineType,
+    grape,
+    region,
+    country,
+    year,
+    winery,
+    description
+  }: {
+    name: string
+    wineType: string
+    grape: string
+    region: string
+    country: string
+    year: string
+    winery: string
+    description:string
+  },
+  language = 'it'
+): Promise<string> {
+  const langText =
+    language === 'en'
+      ? 'Write a very short, elegant, and original wine description based on the provided wine facts. Describe the wine’s aroma, taste, and overall character. Conclude with a food pairing suggestion. Avoid repetition and do not mention price. Answer only in English.'
+      : "Scrivi una descrizione molto breve, elegante e originale del vino basandoti sui fatti forniti. Descrivi l'aroma, il gusto e il carattere complessivo del vino. Concludi con un suggerimento di abbinamento gastronomico. Evita ripetizioni e non menzionare il prezzo. Rispondi solo in italiano."
+
+  const wineFacts = [
+    `Name: ${name}`,
+    `Type: ${wineType}`,
+    `Grape: ${grape}`,
+    `Region: ${region}`,
+    `Country: ${country}`,
+    `Year: ${year}`,
+    `Winery: ${winery}`,
+    `Info: ${description}`,
+  ].filter(Boolean)
+
+  const prompt = `
+You are a professional sommelier. ${langText}
+
+Wine Facts:
+${wineFacts.map((fact, i) => `${i + 1}. ${fact}`).join('\n')}
+`.trim()
+
+  const res = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.4,
+    max_tokens: 300,
+  })
+
+  return trimToLastFullSentence(res.choices[0].message.content.trim())
+}
+
 
 function trimToLastFullSentence(text) {
   const lastPeriodIndex = text.lastIndexOf('.')

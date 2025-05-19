@@ -1,6 +1,9 @@
 import express from 'express'
 import { searchWines, getWineDetails } from './scraper.js'
-import { generateWineDescription } from './sommellier.js'
+import {
+  generateWineDescription,
+  generateDescriptionFromWine,
+} from './sommellier.js'
 import { retry } from './utils.js'
 
 const app = express()
@@ -40,6 +43,56 @@ app.get('/details', async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Detail fetch failed after retries' })
+  }
+})
+
+
+app.post('/description', async (req, res) => {
+  const {
+    name,
+    wineType,
+    grape,
+    region,
+    country,
+    year,
+    winery,
+    description,
+    language = 'it'
+  } = req.body
+
+  if (!name || !wineType || !grape) {
+    return res
+      .status(400)
+      .json({ error: 'Missing required wine fields (name, wineType, grape)' })
+  }
+
+  try {
+    const generatedDescription = await retry(
+      () =>
+        generateDescriptionFromWine(
+          { name, wineType, grape, region, country, year, winery, description },
+          language
+        ),
+      2
+    )
+
+    const wine = {
+      name,
+      wineType,
+      grape,
+      region,
+      country,
+      year,
+      winery,
+      generatedDescription,
+    }
+
+    res.json(wine)
+  } catch (err) {
+    console.error('Error generating wine description:', err)
+    res
+      .status(500)
+      .json({ error: 'Description generation failed after retries' })
   }
 })
 
