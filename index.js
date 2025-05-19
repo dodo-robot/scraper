@@ -57,7 +57,6 @@ app.post('/description', async (req, res) => {
     year,
     winery,
     description,
-    language = 'it'
   } = req.body
 
   if (!name || !wineType || !grape) {
@@ -71,7 +70,7 @@ app.post('/description', async (req, res) => {
       () =>
         generateDescriptionFromWine(
           { name, wineType, grape, region, country, year, winery, description },
-          language
+          "it"
         ),
       2
     )
