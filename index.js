@@ -48,29 +48,30 @@ app.get('/details', async (req, res) => {
 
 
 app.post('/description', async (req, res) => {
-  const {
-    name,
-    wineType,
-    grape,
-    region,
-    country,
-    year,
-    winery,
-    description,
-  } = req.body
-
-  if (!name || !wineType || !grape) {
-    return res
-      .status(400)
-      .json({ error: 'Missing required wine fields (name, wineType, grape)' })
-  }
-
   try {
+    const body = await req.json() // <- THIS is key
+    const {
+      name,
+      wineType,
+      grape,
+      region,
+      country,
+      year,
+      winery,
+      description,
+    } = body
+
+    if (!name || !wineType || !grape) {
+      return res
+        .status(400)
+        .json({ error: 'Missing required wine fields (name, wineType, grape)' })
+    }
+
     const generatedDescription = await retry(
       () =>
         generateDescriptionFromWine(
           { name, wineType, grape, region, country, year, winery, description },
-          "it"
+          'it'
         ),
       2
     )
