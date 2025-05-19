@@ -9,6 +9,9 @@ import { retry } from './utils.js'
 const app = express()
 const PORT = process.env.PORT || 4000
 
+// Add this middleware to parse JSON bodies
+app.use(express.json())
+
 app.get('/search', async (req, res) => {
   const query = req.query.query
   if (!query) return res.status(400).json({ error: 'Missing query param' })
@@ -46,10 +49,8 @@ app.get('/details', async (req, res) => {
   }
 })
 
-
 app.post('/description', async (req, res) => {
   try {
-    const body = await req.json() // <- THIS is key
     const {
       name,
       wineType,
@@ -59,7 +60,7 @@ app.post('/description', async (req, res) => {
       year,
       winery,
       description,
-    } = body
+    } = req.body // ✅ use req.body, not req.json()
 
     if (!name || !wineType || !grape) {
       return res
@@ -84,7 +85,7 @@ app.post('/description', async (req, res) => {
       country,
       year,
       winery,
-      generatedDescription,
+      description: generatedDescription,
     }
 
     res.json(wine)
@@ -95,8 +96,6 @@ app.post('/description', async (req, res) => {
       .json({ error: 'Description generation failed after retries' })
   }
 })
-
- 
 
 app.listen(PORT, () => {
   console.log(`🍷 Vivino API running on port ${PORT}`)
