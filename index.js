@@ -25,6 +25,31 @@ app.get('/search', async (req, res) => {
   }
 })
 
+app.get('/pairings', async (req, res) => {
+  const url = req.query.url
+  if (!url) return res.status(400).json({ error: 'Missing url param' })
+
+  try {
+    const details = await retry(() => getWineDetails(url), 3)
+    const { wine, reviews, wineFacts, foodPairings } = details
+    const wineData = { reviews, wineFacts, foodPairings }
+
+    const description = await retry(
+      () => generateWineDescription(wineData, 'it'),
+      2
+    )
+
+    wine.description = description
+    wine.foodPairings = foodPairings
+
+    res.json(wine)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Detail fetch failed after retries' })
+  }
+})
+
+
 app.get('/details', async (req, res) => {
   const url = req.query.url
   if (!url) return res.status(400).json({ error: 'Missing url param' })

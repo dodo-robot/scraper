@@ -34,20 +34,17 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
   return trimToLastFullSentence(res.choices[0].message.content.trim())
 }
 
-
-export async function generateDescriptionFromWine(
-  {
-    name,
-    wineType,
-    grape,
-    region,
-    country,
-    year,
-    winery,
-    description,
-    language
-  }
-) {
+export async function generateDescriptionFromWine({
+  name,
+  wineType,
+  grape,
+  region,
+  country,
+  year,
+  winery,
+  description,
+  language,
+}) {
   const langText =
     language === 'en'
       ? 'Write a very short, elegant, and original wine description based on the provided wine facts. Describe the wine’s aroma, taste, and overall character. Conclude with a food pairing suggestion. Avoid repetition and do not mention price. Answer only in English.'
@@ -81,21 +78,19 @@ ${wineFacts.map((fact, i) => `${i + 1}. ${fact}`).join('\n')}
   return trimToLastFullSentence(res.choices[0].message.content.trim())
 }
 
-
 function trimToLastFullSentence(text) {
   const lastPeriodIndex = text.lastIndexOf('.')
   if (lastPeriodIndex === -1) return text // No period found, return as is
   return text.slice(0, lastPeriodIndex + 1).trim()
 }
 
-
 /**
  * For each dish, recommend 3 wines per price category
- * @param {string[]} menu - List of dishes
+ * @param {string} dish - List of dishes
  * @param {Array<{name: string, price: number, [key: string]: any}>} wines - Wine objects with price
  * @returns {Promise<Record<string, { low: string[], medium: string[], high: string[] }>>} Recommendations per dish
  */
-export async function recommendWinesPerDish(menu, wines) {
+export async function recommendWinesPerDish(dish, wines) {
   // Price categories
   const priceCategories = {
     low: [0, 30],
@@ -119,8 +114,7 @@ export async function recommendWinesPerDish(menu, wines) {
 
   const recommendations = {}
 
-  for (const dish of menu) {
-    const prompt = `
+  const prompt = `
   You are a sommelier expert. For the dish "${dish}", recommend **3 wines** for each of the following price categories:
   
   - Low price wines (under $30)
@@ -138,22 +132,21 @@ export async function recommendWinesPerDish(menu, wines) {
   Return the recommendations as a JSON object with keys "low", "medium", and "high", each containing an array of wine objects.
   `
 
-    const res = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [{ role: 'user', content: prompt }],
-      temperature: 0.7,
-      max_tokens: 300,
-    })
+  const res = await openai.chat.completions.create({
+    model: 'gpt-4',
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.7,
+    max_tokens: 300,
+  })
 
-    let recs
-    try {
-      recs = JSON.parse(res.choices[0].message.content)
-    } catch {
-      recs = res.choices[0].message.content
-    }
-
-    recommendations[dish] = recs
+  let recs
+  try {
+    recs = JSON.parse(res.choices[0].message.content)
+  } catch {
+    recs = res.choices[0].message.content
   }
+
+  recommendations[dish] = recs
 
   return recommendations
 }
