@@ -115,29 +115,38 @@ export async function recommendWinesPerDish(dish, wines) {
   const recommendations = {}
 
   const prompt = `
-  You are a sommelier expert. For the dish "${dish}", recommend **3 wines** for each of the following price categories:
-  
-  - Low price wines (under $30)
-  - Medium price wines ($30 to $60)
-  - High price wines (above $60)
-  
-  You have the following wines available:
-  
-  ${wines
-    .map(
-      (w, i) =>
-        `${i + 1}. Name: ${w.name} | Grape: ${w.grape} | Region: ${
-          w.region
-        } | Country: ${w.country} | Winery: ${w.winery} | Type: ${
-          w.wine_type
-        } | Price: $${w.price}`
-    )
-    .join('\n')}
-  
-  For each price category, choose 3 wines from the list above that best pair with the dish.
-  
-  Return the recommendations as a JSON object with keys "low", "medium", and "high", each containing an array of wine objects.
-  `.trim()
+You are a sommelier expert. For the dish "${dish}", recommend exactly **3 wines** for each of the following price categories:
+
+- Low price wines (under $30)
+- Medium price wines ($30 to $60)
+- High price wines (above $60)
+
+You have the following wines available:
+
+${wines
+  .map(
+    (w, i) =>
+      `${i + 1}. Name: ${w.name} | Grape: ${w.grape} | Region: ${
+        w.region
+      } | Country: ${w.country} | Winery: ${w.winery} | Type: ${
+        w.wine_type
+      } | Id: ${w.id} Price: $${w.price}`
+  )
+  .join('\n')}
+
+Instructions:
+- Choose 3 wines from the list above for each price category that best pair with the dish.
+- Do NOT include any commentary, description, or explanation.
+- ONLY return a valid JSON object structured like this:
+
+{
+  "comment": "Recommendations for the dish"
+  "low": [ { "name": "...", "winery": "...", "price": ... }, ... ],
+  "medium": [ { "name": "...", "winery": "...", "price": ... }, ... ],
+  "high": [ { "name": "...", "winery": "...", "price": ... }, ... ]
+}
+- The wine objects MUST contain the following fields: name, winery, price, id.
+`.trim()
 
   const res = await openai.chat.completions.create({
     model: 'gpt-4',
