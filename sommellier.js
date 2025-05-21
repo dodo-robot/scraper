@@ -130,7 +130,7 @@ ${wines
         w.region
       } | Country: ${w.country} | Winery: ${w.winery} | Type: ${
         w.wine_type
-      } | Id: ${w.id} | Price: $${w.price}`
+      } | Id: ${w.id} | Image: ${w.image} | Price: $${w.price}`
   )
   .join('\n')}
 
@@ -146,7 +146,7 @@ Instructions:
 }
 
 - The "comment" should briefly describe the dish and the overall logic behind the wine selections.
-- The wine objects MUST contain the following fields: name, winery, price, id.
+- The wine objects MUST contain the following fields: name, winery, price, id, image.
 - Do NOT include any text, markdown, or explanation outside of the JSON object.
 `.trim()
 
@@ -167,5 +167,5 @@ Instructions:
 
   recommendations[dish] = recs
 
-  return recommendations
+  return recs
 }
