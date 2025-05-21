@@ -112,7 +112,6 @@ export async function recommendWinesPerDish(dish, wines) {
     high: wines.filter((w) => w.price >= priceCategories.high[0]),
   }
 
-  const recommendations = {}
 
   const prompt = `
 You are a sommelier expert. For the dish "${dish}", recommend exactly **3 wines** for each of the following price categories:
@@ -135,17 +134,14 @@ ${wines
   .join('\n')}
 
 Instructions:
-- Choose 3 wines from the list above for each price category that best pair with the dish.
+- Choose tops 3 wines from the list above for each price category that best pair with the dish.
 - Return a valid JSON object structured exactly like this:
-
 {
-  "comment": "A brief explanation of the pairing choices.",
   "low": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ],
   "medium": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ],
   "high": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ]
 }
 
-- The "comment" should briefly describe the dish and the overall logic behind the wine selections.
 - The wine objects MUST contain the following fields: name, winery, price, id, image.
 - Do NOT include any text, markdown, or explanation outside of the JSON object.
 `.trim()
@@ -165,7 +161,6 @@ Instructions:
     recs = res.choices[0].message.content
   }
 
-  recommendations[dish] = recs
 
   return recs
 }
