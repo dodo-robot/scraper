@@ -29,7 +29,7 @@ app.get('/search', async (req, res) => {
 app.post('/pairings', async (req, res) => {
   try {
     const {
-      dish
+      dish,
       wines,
     } = req.body // ✅ use req.body, not req.json()
     const suggestions = await retry(() => recommendWinesPerDish(dish, wines), 3)
