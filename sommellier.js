@@ -130,23 +130,26 @@ ${wines
         w.region
       } | Country: ${w.country} | Winery: ${w.winery} | Type: ${
         w.wine_type
-      } | Id: ${w.id} Price: $${w.price}`
+      } | Id: ${w.id} | Price: $${w.price}`
   )
   .join('\n')}
 
 Instructions:
 - Choose 3 wines from the list above for each price category that best pair with the dish.
-- Do NOT include any commentary, description, or explanation.
-- ONLY return a valid JSON object structured like this:
+- Return a valid JSON object structured exactly like this:
 
 {
-  "comment": "Recommendations for the dish"
-  "low": [ { "name": "...", "winery": "...", "price": ... }, ... ],
-  "medium": [ { "name": "...", "winery": "...", "price": ... }, ... ],
-  "high": [ { "name": "...", "winery": "...", "price": ... }, ... ]
+  "comment": "A brief explanation of the pairing choices.",
+  "low": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ],
+  "medium": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ],
+  "high": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ]
 }
+
+- The "comment" should briefly describe the dish and the overall logic behind the wine selections.
 - The wine objects MUST contain the following fields: name, winery, price, id.
+- Do NOT include any text, markdown, or explanation outside of the JSON object.
 `.trim()
+
 
   const res = await openai.chat.completions.create({
     model: 'gpt-4',
