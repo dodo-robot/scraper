@@ -124,13 +124,20 @@ export async function recommendWinesPerDish(dish, wines) {
   You have the following wines available:
   
   ${wines
-    .map((w, i) => `${i + 1}. ${w.name} - $${w.price} - ${w.description}`)
+    .map(
+      (w, i) =>
+        `${i + 1}. Name: ${w.name} | Grape: ${w.grape} | Region: ${
+          w.region
+        } | Country: ${w.country} | Winery: ${w.winery} | Type: ${
+          w.wine_type
+        } | Price: $${w.price}`
+    )
     .join('\n')}
   
   For each price category, choose 3 wines from the list above that best pair with the dish.
   
   Return the recommendations as a JSON object with keys "low", "medium", and "high", each containing an array of wine objects.
-  `
+  `.trim()
 
   const res = await openai.chat.completions.create({
     model: 'gpt-4',
