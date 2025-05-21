@@ -134,17 +134,22 @@ ${wines
   .join('\n')}
 
 Instructions:
-- Choose tops 3 wines from the list above for each price category that best pair with the dish.
+- Choose the top 3 wines from the list above for each price category that best pair with the dish.
+- A wine must only be included in a category if its price falls strictly within the specified range:
+  - Low: price < 30
+  - Medium: 30 <= price <= 60
+  - High: price > 60
+- Do not include any wine in more than one category.
 - Return a valid JSON object structured exactly like this:
 {
-  "low": [ { "name": "...",  "id": "..." }, ... ],
-  "medium": [ { "name": "...",  "id": "..." }, ... ],
-  "high": [ { "name": "...",  "id": "..." }, ... ]
+  "low": [ { "name": "...", "id": "..." }, ... ],
+  "medium": [ { "name": "...", "id": "..." }, ... ],
+  "high": [ { "name": "...", "id": "..." }, ... ]
 }
-
 - The wine objects MUST contain the following fields: name, id.
 - Do NOT include any text, markdown, or explanation outside of the JSON object.
 `.trim()
+
 
 
   const res = await openai.chat.completions.create({
