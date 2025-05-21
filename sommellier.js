@@ -129,7 +129,7 @@ ${wines
         w.region
       } | Country: ${w.country} | Winery: ${w.winery} | Type: ${
         w.wine_type
-      } | Id: ${w.id} | Image: ${w.image} | Price: $${w.price}`
+      } | Id: ${w.id} | Price: $${w.price}`
   )
   .join('\n')}
 
@@ -137,12 +137,12 @@ Instructions:
 - Choose tops 3 wines from the list above for each price category that best pair with the dish.
 - Return a valid JSON object structured exactly like this:
 {
-  "low": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ],
-  "medium": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ],
-  "high": [ { "name": "...", "winery": "...", "price": ..., "id": "..." }, ... ]
+  "low": [ { "name": "...",  "id": "..." }, ... ],
+  "medium": [ { "name": "...",  "id": "..." }, ... ],
+  "high": [ { "name": "...",  "id": "..." }, ... ]
 }
 
-- The wine objects MUST contain the following fields: name, winery, price, id, image.
+- The wine objects MUST contain the following fields: name, id.
 - Do NOT include any text, markdown, or explanation outside of the JSON object.
 `.trim()
 
@@ -151,7 +151,7 @@ Instructions:
     model: 'gpt-4',
     messages: [{ role: 'user', content: prompt }],
     temperature: 0.7,
-    max_tokens: 300,
+    max_tokens: 600,
   })
 
   let recs
