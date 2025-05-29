@@ -32,8 +32,14 @@ app.post('/pairings', async (req, res) => {
       dish,
       wines,
     } = req.body // ✅ use req.body, not req.json()
-    const suggestions = await retry(() => recommendWinesPerDish(dish, wines), 3)
-    res.json(suggestions)
+    const {recommendations, usage} = await retry(() => recommendWinesPerDish(dish, wines), 3)
+
+    const result = { 
+      recommendations: recommendations,
+      usage: usage,
+    }
+
+    res.json(result)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Suggestions fetch failed after retries' })
@@ -50,7 +56,7 @@ app.get('/details', async (req, res) => {
     const { wine, reviews, wineFacts, foodPairings } = details
     const wineData = { reviews, wineFacts, foodPairings }
 
-    const description = await retry(
+    const {description, usage} = await retry(
       () => generateWineDescription(wineData, 'it'),
       2
     )
@@ -58,7 +64,12 @@ app.get('/details', async (req, res) => {
     wine.description = description
     wine.foodPairings = foodPairings
 
-    res.json(wine)
+    const result = { 
+      wine: wine,
+      usage: usage,
+    }
+
+    res.json(result)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Detail fetch failed after retries' })
@@ -84,7 +95,7 @@ app.post('/description', async (req, res) => {
         .json({ error: 'Missing required wine fields (name, wineType, grape)' })
     }
 
-    const generatedDescription = await retry(
+    const {description, usage} =  = await retry(
       () =>
         generateDescriptionFromWine(
           { name, wineType, grape, region, country, year, winery, description },
@@ -104,7 +115,13 @@ app.post('/description', async (req, res) => {
       description: generatedDescription,
     }
 
-    res.json(wine)
+    const result = { 
+      wine: wine,
+      usage: usage,
+    }
+
+
+    res.json(result)
   } catch (err) {
     console.error('Error generating wine description:', err)
     res

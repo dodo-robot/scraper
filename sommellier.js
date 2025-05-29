@@ -31,8 +31,12 @@ ${reviews.map((r, i) => `${i + 1}. ${r}`).join('\n')}
     max_tokens: 400,
   })
 
-  return trimToLastFullSentence(res.choices[0].message.content.trim())
+  return {
+    description: trimToLastFullSentence(res.choices[0].message.content.trim()),
+    usage: res.usage,
+  }
 }
+
 
 export async function generateDescriptionFromWine({
   name,
@@ -74,6 +78,7 @@ ${wineFacts.map((fact, i) => `${i + 1}. ${fact}`).join('\n')}
     temperature: 0.4,
     max_tokens: 300,
   })
+
 
   try {
     recs = JSON.parse(res.choices[0].message.content.trim())
@@ -189,3 +194,5 @@ Instructions:
 
   return { recommendations: recs, usage }
 }
+
+
