@@ -54,19 +54,19 @@ app.get('/details', async (req, res) => {
   try {
     const details = await retry(() => getWineDetails(url), 3)
     const { wine, reviews, wineFacts, foodPairings } = details
-    const wineData = { reviews, wineFacts, foodPairings }
+    /* const wineData = { reviews, wineFacts, foodPairings }
 
     const {description, usage} = await retry(
       () => generateWineDescription(wineData, 'it'),
       2
-    )
+    ) */
 
-    wine.description = description
+    wine.description = ''
     wine.foodPairings = foodPairings
 
     const result = { 
       wine: wine,
-      usage: usage,
+      usage: null,
     }
 
     res.json(result)
