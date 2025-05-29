@@ -95,7 +95,7 @@ app.post('/description', async (req, res) => {
         .json({ error: 'Missing required wine fields (name, wineType, grape)' })
     }
 
-    const res =  = await retry(
+    const res = await retry(
       () =>
         generateDescriptionFromWine(
           { name, wineType, grape, region, country, year, winery, description },
