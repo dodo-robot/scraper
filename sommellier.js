@@ -75,7 +75,22 @@ ${wineFacts.map((fact, i) => `${i + 1}. ${fact}`).join('\n')}
     max_tokens: 300,
   })
 
-  return trimToLastFullSentence(res.choices[0].message.content.trim())
+  try {
+    recs = JSON.parse(res.choices[0].message.content.trim())
+  } catch {
+    recs = res.choices[0].message.content.trim()
+  }
+
+  let usage = null
+
+  if (res.usage) {
+    usage = res.usage
+  }
+
+  return {
+    description: trimToLastFullSentence(recs),
+    usage,
+  }
 }
 
 function trimToLastFullSentence(text) {
@@ -166,6 +181,11 @@ Instructions:
     recs = res.choices[0].message.content
   }
 
+  let usage = null
 
-  return recs
+  if (res.usage) { 
+    usage = res.usage
+  }
+
+  return { recommendations: recs, usage }
 }
